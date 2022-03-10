@@ -28,7 +28,7 @@ except:
     exit = True
 
 filename_adresslist = input("Please type in Filename to read.")
-file_split_char = ","
+file_split_char = ";"
 print("Reading File " + filename_adresslist)
 
 try:
