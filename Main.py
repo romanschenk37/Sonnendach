@@ -119,7 +119,10 @@ def command():
         stopThread = True
         outputtext = outputtext + "Application will stop" + "\n"
         text1.config(text=outputtext)
-        thread_search_adresses.join()
+        try:
+            thread_search_adresses.join()
+        except:
+            pass
         root.quit()
         driver.quit()
     elif(step == 0):
@@ -166,6 +169,7 @@ def command():
         exit = True
 
 def command_exit():
+    global exit
     exit = True
     command()
 
