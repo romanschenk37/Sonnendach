@@ -31,7 +31,7 @@ def search_adresses(adress_list, filename_adresslist, driver):
         adress = line.split(file_split_char)
         if((line != adress_list[0]) & ((adress[20][0:11] != "screenshots"))):
             print(adress)
-            search_string = adress[15] + " " + adress[3] + " " + adress[11] + " " + adress[13]
+            search_string = adress[8] + " " + adress[27] + " " + adress[29]
             search_bar = driver.find_element(By.ID, "searchTypeahead1")
             search_bar.send_keys(Keys.CONTROL + "a")
             search_bar.send_keys(Keys.DELETE)
@@ -54,9 +54,9 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 eignung = driver.find_element(By.ID, "eignung")
                 image_filename = "screenshots/" + eignung.text + " - " + search_string + ".png"
 
-                adress[18] = url
-                adress[19] = eignung.text
-                adress[20] = image_filename
+                adress[14] = url
+                adress[11] = eignung.text
+                adress[15] = image_filename
 
                 adress_file = open(filename_adresslist, "w")
                 new_line_string = ""
