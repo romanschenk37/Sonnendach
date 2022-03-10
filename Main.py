@@ -1,57 +1,42 @@
-# pip install webdriver-manager
+import tkinter
+import threading
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from PIL import Image
 
+from tkinter import filedialog
 import time
-import os
+
+
+
 
 exit = False
-print("Welcome to application Sonnendach")
-print("Website is opening")
+stopThread = False
+filename_adresslist = ""
+adresslist = ""
+step = 0
+s = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=s)
+driver.minimize_window()
+outputtext = "Welcome to application Sonnendach\n"
 
-try:
-    s = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=s)
-    driver.maximize_window()
-    driver.get("https://www.uvek-gis.admin.ch/BFE/sonnendach/")
-    driver.implicitly_wait(20)
-
-    print("opening website was done.")
-    print("Make your Windows ready to create screenshots.")
-    input("Press Enter to start")
-
-except:
-    print("opening website failed")
-    exit = True
-
-filename_adresslist = input("Please type in Filename to read.")
-file_split_char = ";"
-print("Reading File " + filename_adresslist)
-
-try:
-    adress_file = open(filename_adresslist, "r")
-    adress_list = adress_file.read().splitlines()
-    adress_file.close()
-
-except:
-    print("Reading file " + filename_adresslist + " failed.")
-    exit = True
-
-if(exit == False):
+def search_adresses(adress_list, filename_adresslist, driver):
+    file_split_char = ","
+    global exit
     for i in range(len(adress_list)):
         line = adress_list[i]
         adress = line.split(file_split_char)
-        if((line == adress_list[0]) | ((adress[20][0:11] == "screenshots"))):
-            pass
-        else:
+        if((line != adress_list[0]) & ((adress[20][0:11] != "screenshots"))):
+            print(adress)
             search_string = adress[15] + " " + adress[3] + " " + adress[11] + " " + adress[13]
             search_bar = driver.find_element(By.ID, "searchTypeahead1")
-            search_bar.clear()
+            search_bar.send_keys(Keys.CONTROL + "a")
+            search_bar.send_keys(Keys.DELETE)
             search_bar.send_keys(search_string)
-            driver.implicitly_wait(120)
+            driver.implicitly_wait(10)
 
             found = False
             suggestions = driver.find_elements(By.XPATH, "//div[@class='tt-suggestion tt-selectable']")
@@ -104,4 +89,97 @@ if(exit == False):
             else:
                 print("not found: " + search_string)
 
-    input("finished. Press Enter to exit.")
+        if(stopThread == True):
+            print("Exit")
+            break
+
+
+def read_adresslist(filename_adresslist):
+    returnvalues = []
+    try:
+        adress_file = open(filename_adresslist, "r")
+        adress_list = adress_file.read().splitlines()
+        adress_file.close()
+        returnvalues.append(True)
+        returnvalues.append(adress_list)
+    except:
+        returnvalues.append(False)
+    return returnvalues
+
+def command():
+    global exit
+    global stopThread
+    global adresslist
+    global step
+    global driver
+    global filename_adresslist
+    global outputtext
+    global thread_search_adresses
+    if(exit):
+        stopThread = True
+        outputtext = outputtext + "Application will stop" + "\n"
+        text1.config(text=outputtext)
+        thread_search_adresses.join()
+        root.quit()
+        driver.quit()
+    elif(step == 0):
+        #Schritt 1
+        filename_adresslist = filedialog.askopenfilename()
+        outputtext = outputtext + "Reading File " + filename_adresslist + "\n"
+        text1.config(text=outputtext)
+        adress_list_result = read_adresslist(filename_adresslist)
+        if(adress_list_result):
+            adresslist = adress_list_result[1]
+            outputtext = outputtext + "Reading file " + filename_adresslist + " done." + "\n"
+            text1.config(text=outputtext)
+            button1.config(text="open Webbrowser")
+            step += 1
+        else:
+            outputtext = outputtext + "Reading file " + filename_adresslist + " failed." + "\n"
+            text1.config(text=outputtext)
+            exit = True
+            button1.grid_remove()
+    elif(step == 1):
+        # Schritt 2
+        outputtext = outputtext + "Website is opening" + "\n"
+        text1.config(text=outputtext)
+        try:
+            driver.maximize_window()
+            driver.get("https://www.uvek-gis.admin.ch/BFE/sonnendach/")
+            driver.implicitly_wait(20)
+            outputtext = outputtext + "opening website was done.\nPrepare the browser window to create screenshots." + "\n"
+            text1.config(text=outputtext)
+            button1.config(text="start process")
+            step += 1
+        except:
+            outputtext = outputtext + "opening website failed" + "\n"
+            text1.config(text=outputtext)
+            exit = True
+            button1.grid_remove()
+    elif(step == 2):
+        thread_search_adresses = threading.Thread(target=search_adresses, args=(adresslist, filename_adresslist, driver))
+        thread_search_adresses.start()
+        #search_adresses(adresslist, filename_adresslist, driver)
+        outputtext = outputtext + "process running." + "\n"
+        text1.config(text=outputtext)
+        button1.grid_remove()
+        exit = True
+
+def command_exit():
+    exit = True
+    command()
+
+
+
+
+root = tkinter.Tk()
+root.wm_title("Sonnendach")
+text1 = tkinter.Label(root, text=outputtext, width=80, height=30)
+text1.grid(row=1, column=1, padx=10, pady=3)
+button1 = tkinter.Button(root, text="Select Adresslist file", command=command, width=20, height=2, bg="#FCCA03")
+button1.grid(row=2, column=1, padx=10, pady=3)
+button2 = tkinter.Button(root, text="EXIT", command=command_exit, width=20, height=2, bg="#FCCA03")
+button2.grid(row=2, column=2, padx=10, pady=3)
+root.mainloop()
+
+
