@@ -12,7 +12,7 @@ from tkinter import filedialog
 import time
 
 
-DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Screenshot Filename: ", "PV Production 50", "PV Production 75", "PV Production 100", "Value Electricity production"]
+DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Image Filename: ", "PV Production 50", "PV Production 75", "PV Production 100", "Value Electricity production"]
 file_split_char = ","
 OptionList = []
 exit = False
