@@ -58,7 +58,7 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 if(suggestion.text == search_string):
                     found = True
                     suggestion.click()
-                    driver.implicitly_wait(5)
+                    driver.implicitly_wait(120)
                     break
 
             if(found):
