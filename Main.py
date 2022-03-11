@@ -64,19 +64,21 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 time.sleep(2)
                 url = driver.current_url
                 eignung = driver.find_element(By.ID, "eignung")
+                pv_Production50 = driver.find_element(By.ID, "pv50")
+                pv_Production75 = driver.find_element(By.ID, "pv75")
+                pv_Production100 = driver.find_element(By.ID, "pv100")
+                value_electricity_production = driver.find_elements(By.XPATH, "//h2[@id='TitelSolarstrom']//strong")[2]
+
                 image_filename = eignung.text + " - " + search_string + ".png"
-                pv_Production50 = "50"
-                pv_Production75 = "75"
-                pv_Production100 = "100"
-                value_electricity_production = "value"
 
                 adress[columnIndexes[4]] = url
                 adress[columnIndexes[5]] = eignung.text
                 adress[columnIndexes[6]] = image_filename
-                adress[columnIndexes[7]] = pv_Production50
-                adress[columnIndexes[8]] = pv_Production75
-                adress[columnIndexes[9]] = pv_Production100
-                adress[columnIndexes[10]] = value_electricity_production
+                # TODO: 1000er Trennzeichen und " Franken" entfernen
+                adress[columnIndexes[7]] = pv_Production50.text
+                adress[columnIndexes[8]] = pv_Production75.text
+                adress[columnIndexes[9]] = pv_Production100.text
+                adress[columnIndexes[10]] = value_electricity_production.text
 
 
 
