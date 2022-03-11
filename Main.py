@@ -26,6 +26,7 @@ outputtext = "Welcome to application Sonnendach\n"
 columnIndexes = []
 
 
+
 def search_adresses(adress_list, filename_adresslist, driver):
     global file_split_char
     global stopThread
@@ -75,20 +76,20 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 adress_file.write(new_adress_list)
                 adress_file.close()
 
-
-
-                #featureElement = driver.find_element(By.XPATH, "// section[contains(string(),’START SCREENSHOT TESTING’)]")
-                #location = featureElement.location
-                #size = featureElement.size
+                featureElement = driver.find_element(By.XPATH,
+                                                     "//section[@id='one']//div[@class='container']//div[@class='row 150%']")
+                location = featureElement.location
+                size = featureElement.size
                 driver.save_screenshot(image_filename)
-                #x = location["x"]
-                #y = location["y"]
-                #w = x + size["width"]
-                #h = y + size["height"]
-                #fullImg = Image.open(image_filename)
-                #cropImg = fullImg.crop(x, y, w, h)
-                #cropImg.save(image_filename)
-                # TODO Screenshot schneiden
+                x = location["x"]
+                y = 0  # location["y"]
+                w = x + size["width"]
+                h = y + size["height"] - 100
+                area = (x, y, w, h)
+                print(area)
+                fullImg = Image.open(image_filename)
+                cropImg = fullImg.crop(area)
+                cropImg.save(image_filename)
 
 
                 print(image_filename + " was saved.")
