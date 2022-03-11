@@ -7,12 +7,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from PIL import Image
 import os
-
+import qrcode
 from tkinter import filedialog
 import time
 
 
-DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Screenshot Filename: "]
+DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Screenshot Filename: ", "PV Production 50", "PV Production 75", "PV Production 100", "Value Electricity production"]
 file_split_char = ","
 OptionList = []
 exit = False
@@ -35,6 +35,8 @@ def search_adresses(adress_list, filename_adresslist, driver):
 
     if(not os.path.exists("screenshots")):
         os.makedirs("screenshots", exist_ok=False)
+    if (not os.path.exists("qrcodes")):
+        os.makedirs("qrcodes", exist_ok=False)
 
     for i in range(len(adress_list)):
         line = adress_list[i]
@@ -62,11 +64,22 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 time.sleep(2)
                 url = driver.current_url
                 eignung = driver.find_element(By.ID, "eignung")
-                image_filename = "screenshots/" + eignung.text + " - " + search_string + ".png"
+                image_filename = eignung.text + " - " + search_string + ".png"
+                pv_Production50 = "50"
+                pv_Production75 = "75"
+                pv_Production100 = "100"
+                value_electricity_production = "value"
 
                 adress[columnIndexes[4]] = url
                 adress[columnIndexes[5]] = eignung.text
                 adress[columnIndexes[6]] = image_filename
+                adress[columnIndexes[7]] = pv_Production50
+                adress[columnIndexes[8]] = pv_Production75
+                adress[columnIndexes[9]] = pv_Production100
+                adress[columnIndexes[10]] = value_electricity_production
+
+
+
 
                 adress_file = open(filename_adresslist, "w")
                 new_line_string = ""
@@ -79,20 +92,25 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 adress_file.write(new_adress_list)
                 adress_file.close()
 
-                featureElement = driver.find_element(By.XPATH,
-                                                     "//section[@id='one']//div[@class='container']//div[@class='row 150%']")
+                #Create Screenshot
+                featureElement = driver.find_element(By.XPATH, "//section[@id='one']//div[@class='container']//div[@class='row 150%']")
                 location = featureElement.location
                 size = featureElement.size
-                driver.save_screenshot(image_filename)
+                driver.save_screenshot("screenshots/" + image_filename)
                 x = location["x"]
                 y = 0  # location["y"]
                 w = x + size["width"]
                 h = y + size["height"] - 100
                 area = (x, y, w, h)
-                print(area)
-                fullImg = Image.open(image_filename)
+                fullImg = Image.open("screenshots/" + image_filename)
                 cropImg = fullImg.crop(area)
-                cropImg.save(image_filename)
+                cropImg.save("screenshots/" + image_filename)
+
+                #Create QR-Code
+                qr = qrcode.QRCode(version=1, box_size=10, border=5)
+                qr.add_data(url)
+                qr.make(fit=True)
+                qr.make_image(fill='black', back_color='white').save("qrcodes/" + image_filename)
 
 
                 print(image_filename + " was saved.")
