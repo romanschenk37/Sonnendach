@@ -11,7 +11,8 @@ from tkinter import filedialog
 import time
 
 
-
+DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Screenshot Filename: "]
+file_split_char = ","
 OptionList = []
 exit = False
 stopThread = False
@@ -22,30 +23,21 @@ s = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=s)
 driver.minimize_window()
 outputtext = "Welcome to application Sonnendach\n"
-file_split_char = ","
+columnIndexes = []
 
 
 def search_adresses(adress_list, filename_adresslist, driver):
     global file_split_char
     global stopThread
-    columnIndex1 = getColumnIndex(variabledropdown1.get())
-    columnIndex2 = getColumnIndex(variabledropdown2.get())
-    columnIndex3 = getColumnIndex(variabledropdown3.get())
-    columnIndex4 = getColumnIndex(variabledropdown4.get())
-    columnIndex5 = getColumnIndex(variabledropdown5.get())
-    columnIndex6 = getColumnIndex(variabledropdown6.get())
-    columnIndex7 = getColumnIndex(variabledropdown7.get())
-    columnIndex8 = getColumnIndex(variabledropdown8.get())
-    columnIndex9 = getColumnIndex(variabledropdown9.get())
-    columnIndex10 = getColumnIndex(variabledropdown10.get())
-    columnIndex11 = getColumnIndex(variabledropdown11.get())
+    global columnIndexes
+
 
     for i in range(len(adress_list)):
         line = adress_list[i]
         adress = line.split(file_split_char)
         if((line != adress_list[0]) & ((adress[20][0:11] != "screenshots"))):
             print(adress)
-            search_string = adress[columnIndex1] + " " + adress[columnIndex2] + " " + adress[columnIndex3] + " " + adress[columnIndex4]
+            search_string = adress[columnIndexes[0]] + " " + adress[columnIndexes[1]] + " " + adress[columnIndexes[2]] + " " + adress[columnIndexes[3]]
             search_bar = driver.find_element(By.ID, "searchTypeahead1")
             search_bar.send_keys(Keys.CONTROL + "a")
             search_bar.send_keys(Keys.DELETE)
@@ -68,9 +60,9 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 eignung = driver.find_element(By.ID, "eignung")
                 image_filename = "screenshots/" + eignung.text + " - " + search_string + ".png"
 
-                adress[columnIndex5] = url
-                adress[columnIndex6] = eignung.text
-                adress[columnIndex7] = image_filename
+                adress[columnIndexes[4]] = url
+                adress[columnIndexes[5]] = eignung.text
+                adress[columnIndexes[6]] = image_filename
 
                 adress_file = open(filename_adresslist, "w")
                 new_line_string = ""
@@ -121,6 +113,7 @@ def read_adresslist(filename_adresslist):
 
 def createFrameFileColums(headers):
     global OptionList
+    global DropDownLabels
     for header in headers:
         OptionList.append(header)
     desctext = tkinter.Label(frameFileColums, text="Please select Headers of Columns")
@@ -128,47 +121,19 @@ def createFrameFileColums(headers):
     frameFileColums1 = tkinter.Frame(frameFileColums)
     frameFileColums1.grid(row=2, column=1, padx=10, pady=3)
 
-    text1 = tkinter.Label(frameFileColums1, text="Street: ")
-    text1.grid(row=1, column=1, padx=10, pady=3)
-    dropdown1 = tkinter.OptionMenu(frameFileColums1, variabledropdown1, *OptionList)
-    dropdown1.grid(row=1, column=2, padx=10, pady=3)
+    for i in range(len(DropDownLabels)):
+        exec("text" + str(i+1) + " = tkinter.Label(frameFileColums1, text=\"" + DropDownLabels[i] + "\")")
+        exec("text" + str(i+1) + ".grid(row=" + str(i+1) + ", column=1, padx=10, pady=3)")
+        exec("dropdown" + str(i+1) + " = tkinter.OptionMenu(frameFileColums1, variablesDropdown[" + str(i) + "], *OptionList)")
+        exec("dropdown" + str(i+1) + ".grid(row=" + str(i+1) + ", column=2, padx=10, pady=3)")
 
-    text2 = tkinter.Label(frameFileColums1, text="Number: ")
-    text2.grid(row=2, column=1, padx=10, pady=3)
-    dropdown2 = tkinter.OptionMenu(frameFileColums1, variabledropdown2, *OptionList)
-    dropdown2.grid(row=2, column=2, padx=10, pady=3)
-
-    text3 = tkinter.Label(frameFileColums1, text="Postal code: ")
-    text3.grid(row=3, column=1, padx=10, pady=3)
-    dropdown3 = tkinter.OptionMenu(frameFileColums1, variabledropdown3, *OptionList)
-    dropdown3.grid(row=3, column=2, padx=10, pady=3)
-
-    text4 = tkinter.Label(frameFileColums1, text="City: ")
-    text4.grid(row=4, column=1, padx=10, pady=3)
-    dropdown4 = tkinter.OptionMenu(frameFileColums1, variabledropdown4, *OptionList)
-    dropdown4.grid(row=4, column=2, padx=10, pady=3)
-
-    text5 = tkinter.Label(frameFileColums1, text="Sonnendach URL: ")
-    text5.grid(row=5, column=1, padx=10, pady=3)
-    dropdown5 = tkinter.OptionMenu(frameFileColums1, variabledropdown5, *OptionList)
-    dropdown5.grid(row=5, column=2, padx=10, pady=3)
-
-    text6 = tkinter.Label(frameFileColums1, text="Eignung")
-    text6.grid(row=6, column=1, padx=10, pady=3)
-    dropdown6 = tkinter.OptionMenu(frameFileColums1, variabledropdown6, *OptionList)
-    dropdown6.grid(row=6, column=2, padx=10, pady=3)
-
-    text7 = tkinter.Label(frameFileColums1, text="Screenshot Filename: ")
-    text7.grid(row=7, column=1, padx=10, pady=3)
-    dropdown7 = tkinter.OptionMenu(frameFileColums1, variabledropdown7, *OptionList)
-    dropdown7.grid(row=7, column=2, padx=10, pady=3)
-
-
-def getColumnIndex(header):
+def getColumnIndex():
     global OptionList
-    for i in range(len(OptionList)):
-        if(OptionList[i] == header):
-            return i
+    global columnIndexes
+    for j in range(len(DropDownLabels)):
+        for i in range(len(OptionList)):
+            if(OptionList[i] == variablesDropdown[j].get()):
+                columnIndexes.append(i)
 
 def command():
     global exit
@@ -212,6 +177,8 @@ def command():
             exit = True
             button1.grid_remove()
     elif (step == 1):
+        # TODO: check if dropdowns are selected
+        getColumnIndex()
         outputtext = outputtext + "Reading File " + filename_adresslist + " done." + "\n"
         mainText.config(text=outputtext)
         frameFileColums.grid_remove()
@@ -257,17 +224,10 @@ mainText = tkinter.Label(root, text=outputtext, width=80)
 mainText.grid(row=1, column=1, padx=10, pady=3)
 
 frameFileColums = tkinter.Frame(root)
-variabledropdown1 = tkinter.StringVar(root)
-variabledropdown2 = tkinter.StringVar(root)
-variabledropdown3 = tkinter.StringVar(root)
-variabledropdown4 = tkinter.StringVar(root)
-variabledropdown5 = tkinter.StringVar(root)
-variabledropdown6 = tkinter.StringVar(root)
-variabledropdown7 = tkinter.StringVar(root)
-variabledropdown8 = tkinter.StringVar(root)
-variabledropdown9 = tkinter.StringVar(root)
-variabledropdown10 = tkinter.StringVar(root)
-variabledropdown11 = tkinter.StringVar(root)
+variablesDropdown = []
+for i in range(len(DropDownLabels)):
+    variablesDropdown.append(tkinter.StringVar(root))
+
 
 frameButtons = tkinter.Frame(root)
 frameButtons.grid(row=3, column=1)
