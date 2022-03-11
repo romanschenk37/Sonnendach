@@ -56,12 +56,11 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 if(suggestion.text == search_string):
                     found = True
                     suggestion.click()
-                    driver.implicitly_wait(120)
+                    driver.implicitly_wait(10)
                     break
 
             if(found):
-
-                time.sleep(2)
+                # TODO: Validation
                 url = driver.current_url
                 eignung = driver.find_element(By.ID, "eignung")
                 pv_Production50 = driver.find_element(By.ID, "pv50")
@@ -75,10 +74,10 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 adress[columnIndexes[5]] = eignung.text
                 adress[columnIndexes[6]] = image_filename
                 # TODO: 1000er Trennzeichen und " Franken" entfernen
-                adress[columnIndexes[7]] = pv_Production50.text
-                adress[columnIndexes[8]] = pv_Production75.text
-                adress[columnIndexes[9]] = pv_Production100.text
-                adress[columnIndexes[10]] = value_electricity_production.text
+                adress[columnIndexes[7]] = pv_Production50.text.replace("'", "")
+                adress[columnIndexes[8]] = pv_Production75.text.replace("'", "")
+                adress[columnIndexes[9]] = pv_Production100.text.replace("'", "")
+                adress[columnIndexes[10]] = value_electricity_production.text.replace("'", "").replace(" Franken", "")
 
 
 
@@ -94,25 +93,26 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 adress_file.write(new_adress_list)
                 adress_file.close()
 
+                # Create QR-Code
+                qr = qrcode.QRCode(version=1, box_size=10, border=5)
+                qr.add_data(url)
+                qr.make(fit=True)
+                qr.make_image(fill='black', back_color='white').save("qrcodes/" + image_filename)
+
                 #Create Screenshot
                 featureElement = driver.find_element(By.XPATH, "//section[@id='one']//div[@class='container']//div[@class='row 150%']")
                 location = featureElement.location
                 size = featureElement.size
-                driver.save_screenshot("screenshots/" + image_filename)
                 x = location["x"]
                 y = 0  # location["y"]
                 w = x + size["width"]
                 h = y + size["height"] - 100
                 area = (x, y, w, h)
-                fullImg = Image.open("screenshots/" + image_filename)
-                cropImg = fullImg.crop(area)
-                cropImg.save("screenshots/" + image_filename)
+                time.sleep(2)
+                driver.save_screenshot("screenshots/" + image_filename)
+                time.sleep(0.2)
+                Image.open("screenshots/" + image_filename).crop(area).save("screenshots/" + image_filename)
 
-                #Create QR-Code
-                qr = qrcode.QRCode(version=1, box_size=10, border=5)
-                qr.add_data(url)
-                qr.make(fit=True)
-                qr.make_image(fill='black', back_color='white').save("qrcodes/" + image_filename)
 
 
                 print(image_filename + " was saved.")
