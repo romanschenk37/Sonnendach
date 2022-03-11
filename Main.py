@@ -6,6 +6,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from PIL import Image
+import os
 
 from tkinter import filedialog
 import time
@@ -32,6 +33,8 @@ def search_adresses(adress_list, filename_adresslist, driver):
     global stopThread
     global columnIndexes
 
+    if(not os.path.exists("screenshots")):
+        os.makedirs("screenshots", exist_ok=False)
 
     for i in range(len(adress_list)):
         line = adress_list[i]
