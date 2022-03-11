@@ -123,7 +123,7 @@ def createFrameFileColums(headers):
     global OptionList
     for header in headers:
         OptionList.append(header)
-    desctext = tkinter.Label(frameFileColums, text="Please type in Header of Columns")
+    desctext = tkinter.Label(frameFileColums, text="Please select Headers of Columns")
     desctext.grid(row=1, column=1, padx=10, pady=3)
     frameFileColums1 = tkinter.Frame(frameFileColums)
     frameFileColums1.grid(row=2, column=1, padx=10, pady=3)
