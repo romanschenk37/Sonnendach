@@ -60,6 +60,7 @@ def search_adresses(adress_list, filename_adresslist, driver):
                     break
 
             if(found):
+                time.sleep(2)
                 # TODO: Validation
                 url = driver.current_url
                 eignung = driver.find_element(By.ID, "eignung")
@@ -108,7 +109,7 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 w = x + size["width"]
                 h = y + size["height"] - 100
                 area = (x, y, w, h)
-                time.sleep(2)
+                time.sleep(1)
                 driver.save_screenshot("screenshots/" + image_filename)
                 time.sleep(0.2)
                 Image.open("screenshots/" + image_filename).crop(area).save("screenshots/" + image_filename)
