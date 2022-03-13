@@ -100,14 +100,18 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 qr.make(fit=True)
                 qr.make_image(fill='black', back_color='white').save("qrcodes/" + image_filename)
 
-                #Create Screenshot
-                featureElement = driver.find_element(By.XPATH, "//section[@id='one']//div[@class='container']//div[@class='row 150%']")
-                location = featureElement.location
-                size = featureElement.size
+                # Create Screenshot
+                featureElement1 = driver.find_element(By.XPATH,
+                                                      "//section[@id='one']//div[@class='container']//div[@class='row 150%']")
+                featureElement2 = driver.find_element(By.XPATH,
+                                                      "//section[@id='one']")
+                location = featureElement1.location
+                size1 = featureElement1.size
+                size2 = featureElement2.size
                 x = location["x"]
-                y = 0  # location["y"]
-                w = x + size["width"]
-                h = y + size["height"] - 100
+                y = 5  # location["y"]
+                w = x + size2["width"]
+                h = y + size1["height"]
                 area = (x, y, w, h)
                 time.sleep(1)
                 driver.save_screenshot("screenshots/" + image_filename)
