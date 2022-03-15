@@ -248,6 +248,7 @@ def command_exit():
 
 
 root = tkinter.Tk()
+root.protocol("WM_DELETE_WINDOW", command_exit)
 root.wm_title("Sonnendach")
 mainText = tkinter.Label(root, text=outputtext, width=80)
 mainText.grid(row=1, column=1, padx=10, pady=3)
