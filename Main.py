@@ -6,12 +6,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from PIL import Image
-
+import os
+import qrcode
 from tkinter import filedialog
 import time
 
 
-DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Screenshot Filename: "]
+DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Image Filename: ", "PV Production 50", "PV Production 75", "PV Production 100", "Value Electricity production"]
 file_split_char = ","
 OptionList = []
 exit = False
@@ -26,16 +27,21 @@ outputtext = "Welcome to application Sonnendach\n"
 columnIndexes = []
 
 
+
 def search_adresses(adress_list, filename_adresslist, driver):
     global file_split_char
     global stopThread
     global columnIndexes
 
+    if(not os.path.exists("screenshots")):
+        os.makedirs("screenshots", exist_ok=False)
+    if (not os.path.exists("qrcodes")):
+        os.makedirs("qrcodes", exist_ok=False)
 
     for i in range(len(adress_list)):
         line = adress_list[i]
         adress = line.split(file_split_char)
-        if((line != adress_list[0]) & ((adress[20][0:11] != "screenshots"))):
+        if((line != adress_list[0]) & ((adress[columnIndexes[6]] == ""))):
             print(adress)
             search_string = adress[columnIndexes[0]] + " " + adress[columnIndexes[1]] + " " + adress[columnIndexes[2]] + " " + adress[columnIndexes[3]]
             search_bar = driver.find_element(By.ID, "searchTypeahead1")
@@ -50,19 +56,32 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 if(suggestion.text == search_string):
                     found = True
                     suggestion.click()
-                    driver.implicitly_wait(120)
+                    driver.implicitly_wait(10)
                     break
 
             if(found):
-
                 time.sleep(2)
+                # TODO: Validation
                 url = driver.current_url
                 eignung = driver.find_element(By.ID, "eignung")
-                image_filename = "screenshots/" + eignung.text + " - " + search_string + ".png"
+                pv_Production50 = driver.find_element(By.ID, "pv50")
+                pv_Production75 = driver.find_element(By.ID, "pv75")
+                pv_Production100 = driver.find_element(By.ID, "pv100")
+                value_electricity_production = driver.find_elements(By.XPATH, "//h2[@id='TitelSolarstrom']//strong")[2]
+
+                image_filename = eignung.text + " - " + search_string + ".png"
 
                 adress[columnIndexes[4]] = url
                 adress[columnIndexes[5]] = eignung.text
                 adress[columnIndexes[6]] = image_filename
+                # TODO: 1000er Trennzeichen und " Franken" entfernen
+                adress[columnIndexes[7]] = pv_Production50.text.replace("'", "")
+                adress[columnIndexes[8]] = pv_Production75.text.replace("'", "")
+                adress[columnIndexes[9]] = pv_Production100.text.replace("'", "")
+                adress[columnIndexes[10]] = value_electricity_production.text.replace("'", "").replace(" Franken", "")
+
+
+
 
                 adress_file = open(filename_adresslist, "w")
                 new_line_string = ""
@@ -75,20 +94,30 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 adress_file.write(new_adress_list)
                 adress_file.close()
 
+                # Create QR-Code
+                qr = qrcode.QRCode(version=1, box_size=10, border=5)
+                qr.add_data(url)
+                qr.make(fit=True)
+                qr.make_image(fill='black', back_color='white').save("qrcodes/" + image_filename)
 
+                # Create Screenshot
+                featureElement1 = driver.find_element(By.XPATH,
+                                                      "//section[@id='one']//div[@class='container']//div[@class='row 150%']")
+                featureElement2 = driver.find_element(By.XPATH,
+                                                      "//section[@id='one']")
+                location = featureElement1.location
+                size1 = featureElement1.size
+                size2 = featureElement2.size
+                x = location["x"]
+                y = 5  # location["y"]
+                w = x + size2["width"]
+                h = y + size1["height"]
+                area = (x, y, w, h)
+                time.sleep(1)
+                driver.save_screenshot("screenshots/" + image_filename)
+                time.sleep(0.2)
+                Image.open("screenshots/" + image_filename).crop(area).save("screenshots/" + image_filename)
 
-                #featureElement = driver.find_element(By.XPATH, "// section[contains(string(),’START SCREENSHOT TESTING’)]")
-                #location = featureElement.location
-                #size = featureElement.size
-                driver.save_screenshot(image_filename)
-                #x = location["x"]
-                #y = location["y"]
-                #w = x + size["width"]
-                #h = y + size["height"]
-                #fullImg = Image.open(image_filename)
-                #cropImg = fullImg.crop(x, y, w, h)
-                #cropImg.save(image_filename)
-                # TODO Screenshot schneiden
 
 
                 print(image_filename + " was saved.")
@@ -219,6 +248,7 @@ def command_exit():
 
 
 root = tkinter.Tk()
+root.protocol("WM_DELETE_WINDOW", command_exit)
 root.wm_title("Sonnendach")
 mainText = tkinter.Label(root, text=outputtext, width=80)
 mainText.grid(row=1, column=1, padx=10, pady=3)
