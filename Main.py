@@ -10,9 +10,9 @@ import os
 import qrcode
 from tkinter import filedialog
 import time
+from selenium.webdriver.common.action_chains import ActionChains
 
-
-DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Image Filename: ", "PV Production 50", "PV Production 75", "PV Production 100", "Value Electricity production"]
+DropDownLabels = ["Street: ", "Number: ", "Postal code: ", "City: ", "Sonnendach URL: ", "Eignung", "Image Filename Map: ", "Image Filename Production: ", "Image Filename qrcode: ", "PV Production 50", "PV Production 75", "PV Production 100", "Value Electricity production"]
 file_split_char = ","
 OptionList = []
 exit = False
@@ -63,66 +63,109 @@ def search_adresses(adress_list, filename_adresslist, driver):
                 time.sleep(2)
                 # TODO: Validation
                 url = driver.current_url
-                eignung = driver.find_element(By.ID, "eignung")
-                pv_Production50 = driver.find_element(By.ID, "pv50")
-                pv_Production75 = driver.find_element(By.ID, "pv75")
-                pv_Production100 = driver.find_element(By.ID, "pv100")
-                value_electricity_production = driver.find_elements(By.XPATH, "//h2[@id='TitelSolarstrom']//strong")[2]
-
-                image_filename = eignung.text + " - " + search_string + ".png"
-
-                adress[columnIndexes[4]] = url
-                adress[columnIndexes[5]] = eignung.text
-                adress[columnIndexes[6]] = image_filename
-                # TODO: 1000er Trennzeichen und " Franken" entfernen
-                adress[columnIndexes[7]] = pv_Production50.text.replace("'", "")
-                adress[columnIndexes[8]] = pv_Production75.text.replace("'", "")
-                adress[columnIndexes[9]] = pv_Production100.text.replace("'", "")
-                adress[columnIndexes[10]] = value_electricity_production.text.replace("'", "").replace(" Franken", "")
+                eignung = driver.find_element(By.ID, "eignung").text
+                pv_Production50 = driver.find_element(By.ID, "pv50").text.replace("'", "")
+                pv_Production75 = driver.find_element(By.ID, "pv75").text.replace("'", "")
+                pv_Production100 = driver.find_element(By.ID, "pv100").text.replace("'", "")
+                value_electricity_production = driver.find_elements(By.XPATH, "//h2[@id='TitelSolarstrom']//strong")[2].text.replace("'", "").replace(" Franken", "")
 
 
-
-
-                adress_file = open(filename_adresslist, "w")
-                new_line_string = ""
-                for j in adress:
-                    new_line_string = new_line_string + j + file_split_char
-                adress_list[i] = new_line_string
-                new_adress_list = ""
-                for j in adress_list:
-                    new_adress_list = new_adress_list + (j) + "\n"
-                adress_file.write(new_adress_list)
-                adress_file.close()
+                image_filename = eignung + " - " + search_string
+                image_folder_map = "screenshots/"
+                image_filename_map = image_filename + " map" + ".png"
+                image_folder_production = "screenshots/"
+                image_filename_production = image_filename + " production" + ".png"
+                image_folder_qrcode = "qrcodes/"
+                image_filename_qrcode = image_filename + " qrcode" + ".png"
 
                 # Create QR-Code
                 qr = qrcode.QRCode(version=1, box_size=10, border=5)
                 qr.add_data(url)
                 qr.make(fit=True)
-                qr.make_image(fill='black', back_color='white').save("qrcodes/" + image_filename)
+                qr.make_image(fill='black', back_color='white').save(image_folder_qrcode + image_filename_qrcode)
 
                 # Create Screenshot
-                featureElement1 = driver.find_element(By.XPATH,
-                                                      "//section[@id='one']//div[@class='container']//div[@class='row 150%']")
-                featureElement2 = driver.find_element(By.XPATH,
-                                                      "//section[@id='one']")
-                location = featureElement1.location
-                size1 = featureElement1.size
-                size2 = featureElement2.size
+                try:
+                    driver.execute_script("""var l = document.getElementsByClassName("ol-zoom ol-unselectable ol-control")[0];
+                                               l.parentNode.removeChild(l);""")
+                except:
+                    pass
+
+                mapElement = driver.find_element(By.XPATH,
+                                                 "//div[@id='map']//div[@class='ol-viewport']")
+                location = mapElement.location
+                size = mapElement.size
                 x = location["x"]
-                y = 5  # location["y"]
-                w = x + size2["width"]
-                h = y + size1["height"]
+                y = 43  # location["y"]
+                w = x + size["width"]
+                h = y + size["height"]
                 area = (x, y, w, h)
                 time.sleep(1)
-                driver.save_screenshot("screenshots/" + image_filename)
+                driver.save_screenshot(image_folder_map + image_filename_map)
                 time.sleep(0.2)
-                Image.open("screenshots/" + image_filename).crop(area).save("screenshots/" + image_filename)
+                Image.open(image_folder_map + image_filename_map).crop(area).save(
+                    image_folder_map + image_filename_map)
 
+                # take Screenshot 2
+                try:
+                    chartElement = driver.find_element(By.ID, "chart")
+                    actions = ActionChains(driver)
+                    actions.move_to_element(chartElement).perform()
+                    location = chartElement.location
+                    size = chartElement.size
+                    x = 920
+                    y = 1000
+                    w = 1600
+                    h = 1300
+                    area = (x, y, w, h)
+                    print("X: " + str(x) + "Y: " + str(y) + "W: " + str(w) + "H: " + str(h))
 
+                    time.sleep(1)
+                    driver.save_screenshot(image_folder_production + image_filename_production)
+                    time.sleep(0.2)
+                    Image.open(image_folder_production + image_filename_production).crop(area).save(
+                        image_folder_production + image_filename_production)
+                except:
+                    image_filename_production = "not-found"
 
-                print(image_filename + " was saved.")
+                print(image_filename_map + " was saved.")
             else:
+                url = "not-found"
+                eignung = "not-found"
+                image_filename_map = "not-found"
+                image_filename_production = "not-found"
+                image_filename_qrcode = "not-found"
+                pv_Production50 = "not-found"
+                pv_Production75 = "not-found"
+                pv_Production100 = "not-found"
+                value_electricity_production = "not-found"
+
+
                 print("not found: " + search_string)
+
+
+            #Write back into file
+            adress[columnIndexes[4]] = url
+            adress[columnIndexes[5]] = eignung
+            adress[columnIndexes[6]] = image_filename_map
+            adress[columnIndexes[7]] = image_filename_production
+            adress[columnIndexes[8]] = image_filename_qrcode
+            adress[columnIndexes[9]] = pv_Production50
+            adress[columnIndexes[10]] = pv_Production75
+            adress[columnIndexes[11]] = pv_Production100
+            adress[columnIndexes[12]] = value_electricity_production
+            adress_file = open(filename_adresslist, "w")
+            new_line_string = ""
+            for j in adress:
+                new_line_string = new_line_string + j + file_split_char
+            adress_list[i] = new_line_string
+            new_adress_list = ""
+            for j in adress_list:
+                new_adress_list = new_adress_list + (j) + "\n"
+            adress_file.write(new_adress_list)
+            adress_file.close()
+
+
         if(stopThread == True):
             print("closing Thread")
             break
