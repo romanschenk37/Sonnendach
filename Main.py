@@ -41,7 +41,7 @@ def search_adresses(adress_list, filename_adresslist, driver):
     for i in range(len(adress_list)):
         line = adress_list[i]
         adress = line.split(file_split_char)
-        if((line != adress_list[0]) & ((adress[columnIndexes[6]] == ""))):
+        if((line != adress_list[0]) & ((adress[columnIndexes[4]] == ""))):
             print(adress)
             search_string = adress[columnIndexes[0]] + " " + adress[columnIndexes[1]] + " " + adress[columnIndexes[2]] + " " + adress[columnIndexes[3]]
             search_bar = driver.find_element(By.ID, "searchTypeahead1")
